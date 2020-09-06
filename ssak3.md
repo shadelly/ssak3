@@ -137,6 +137,20 @@ docker push jihwancha/mybnb-html:latest
 # kubectl get pod
 # kubectl get pod -o wide  - Output을 좀더 많이 출력. node 정보도 같이 보여짐.
 
+-- <변경 필요>
+kubectl create ns cna-shop
+kubectl label ns cna-shop istio-injection=enabled
+kubectl create deploy order --image=admin4.azurecr.io/cna-order:v1 -n cna-shop
+kubectl create deploy delivery --image=admin4.azurecr.io/cna-delivery:v1 -n cna-shop
+kubectl create deploy customercenter --image=admin4.azurecr.io/cna-customercenter:v1 -n cna-shop
+kubectl create deploy gateway --image=admin4.azurecr.io/cna-gateway:v1 -n cna-shop
+
+kubectl expose deploy order --port=8080 -n cna-shop
+kubectl expose deploy delivery --port=8080 -n cna-shop
+kubectl expose deploy customercenter --port=8080 -n cna-shop
+kubectl expose deploy gateway --port=8080 -n cna-shop
+-- <여기까지>
+
 cd mybnb/yaml
 
 kubectl apply -f configmap.yaml
