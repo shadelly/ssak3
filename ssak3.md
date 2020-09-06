@@ -29,6 +29,11 @@ sudo apt-get install -y kubectl
 
 ```
 
+## Azure AKS와 ACR 연결
+```console
+az aks update -n admin4-aks -g admin4-resourcegroup --attach-acr admin4
+```
+
 ## Kafka install (kubernetes/helm)
 참고 - (https://workflowy.com/s/msa/27a0ioMCzlpV04Ib#/a7018fb8c62)
 ```console
