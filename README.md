@@ -33,6 +33,23 @@
 # kubectl get pod -o wide  - Output을 좀더 많이 출력. node 정보도 같이 보여짐.
 ```
 
+## azure 클라이언트 설치하기
+```console
+# curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+# az login -u dragon.skcc@gmail.com -p skccadmin!1
+```
+
+## Local에 AKS(Azure Kubernetes Service) 클러스터 접속정보 설정
+```console
+# az aks get-credentials --resource-group ssak3-rg --name ssak3-k8s
+```
+
+## Local에 AKS(Azure Kubernetes Service) 클러스터 접속정보 설정
+```console
+# az aks get-credentials --resource-group ssak3-rg --name ssak3-k8s
+```
+
+
 # sample
 ```console
 ```
