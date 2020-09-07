@@ -1,6 +1,12 @@
 ## MSAEZ 소스 다운로드
 
-## Git 올리기
+## Git
+```console
+# Github에 있는 소스를 다운 받으면 ssk3 폴더가 생성됨
+git clone https://github.com/dragon-skcc/ssak3.git
+# 주요 사용 명령어
+git status
+```
 
 ## 서버에서 Build
 
