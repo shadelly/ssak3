@@ -109,19 +109,19 @@ kubectl edit service/kiali -n istio-system
 
 ## namespace create
 ```console
-kubectl create namespace mybnb
+kubectl create namespace clean
 ```
 
 - istio enabled
 ```console
-kubectl label namespace mybnb istio-injection=enabled
+kubectl label namespace clean istio-injection=enabled
 ```
 
 ## siege deploy
 ```console
-cd mybnb/yaml
+cd clean/yaml
 kubectl apply -f siege.yaml 
-kubectl exec -it siege -n mybnb -- /bin/bash
+kubectl exec -it siege -n clean -- /bin/bash
 apt-get update
 apt-get install httpie
 ```
@@ -141,8 +141,8 @@ mvn package
 ```
 - for dockerhub
 ```console
-docker build -t jihwancha/mybnb-html:latest .
-docker push jihwancha/mybnb-html:latest
+docker build -t jihwancha/clean-html:latest .
+docker push jihwancha/clean-html:latest
 ```
 ## application deploy
 ```console
@@ -168,7 +168,7 @@ kubectl expose deploy customercenter --port=8080 -n cna-shop
 kubectl expose deploy gateway --port=8080 -n cna-shop
 -- <여기까지>
 
-cd mybnb/yaml
+cd clean/yaml
 
 kubectl apply -f configmap.yaml
 
@@ -204,12 +204,12 @@ http://external-ip:20001
 ```
 ## auto scale out settings
 ```console
-kubectl autoscale deploy booking -n mybnb --min=1 --max=10 --cpu-percent=15
-kubectl get deploy booking -n mybnb -w
+kubectl autoscale deploy booking -n clean --min=1 --max=10 --cpu-percent=15
+kubectl get deploy booking -n clean -w
 ```
 ## auto scale out delete
 ```console
-kubectl delete hpa booking -n mybnb
+kubectl delete hpa booking -n clean
 ```
 ## 부하 발생 (siege 에서)
 ```console
