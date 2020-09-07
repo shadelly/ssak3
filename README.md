@@ -95,9 +95,9 @@
 9. 청소가 완료되면, 고객에게 완료되었다고 전달한다 (Async, 알림서비스)
 
 ### 비기능 요구사항 검증
-  ![17](https://user-images.githubusercontent.com/69634194/92386513-e29e7500-f14e-11ea-804e-e21f1f91d625.png)
+  ![17](https://user-images.githubusercontent.com/69634194/92387512-a409ba00-f150-11ea-994c-68282cbc2856.png)
 1. 예약에 대해서는 결제가 처리되어야만 예약 처리하고 장애격리를 위해 CB를 설치함 (트랜잭션 > 1, 장애격리 > 2)
-2. 예약, 결제 관련 이벤트를 마이페이지에서 수신하여 View Table 을 구성 (CQRS) > (성능 > 1)
+2. 예약, 결제 관련 이벤트를 마이페이지에서 수신하여 View Table 을 구성 (CQRS) (성능 > 1)
 
 ## 헥사고날 아키텍처
   ![18](https://user-images.githubusercontent.com/69634194/92385717-4fb10b00-f14d-11ea-9342-3a1a92727032.png)
