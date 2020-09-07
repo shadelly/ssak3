@@ -129,6 +129,102 @@
 # 구현
 분석/설계 단계에서 도출된 헥사고날 아키텍처에 따라, 각 BC별로 대변되는 마이크로 서비스들을 스프링부트로 구현하였다. 배포는 아래와 같이 수행한다.
 
+## Azure Portal 
+- AZure 포탈에서 리소스 그룹 > 쿠버네티스 서비스 생성 > 컨테이너 레지스트리 생성
+- 리소스 그룹 생성 : ssak3-rg
+- 컨테이너 생성( Kubernetes ) : ssak3-aks
+- 레지스트리 생성 : ssak3acr, ssak3acr.azurecr.io
+
+## 클러스터와 ACR 연결
+```console
+# azure 인증
+az account set --subscription "종량제4"
+az aks get-credentials --resource-group ssak3-rg --name TeamA@gkn2019hotmail.onmicrosoft.com
+az acr login --name TeamA@gkn2019hotmail.onmicrosoft.com
+
+# 연결
+az aks update -n ssak3-aks -g ssak3-rg --attach-acr ssak3acr
+``` 
+
+## kafka 설치
+```console
+curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get | bash
+kubectl --namespace kube-system create sa tiller      
+kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller
+helm init --service-account tiller
+kubectl patch deploy --namespace kube-system tiller-deploy -p '{"spec":{"template":{"spec":{"serviceAccount":"tiller"}}}}'
+
+helm repo add incubator http://storage.googleapis.com/kubernetes-charts-incubator
+helm repo update
+
+helm install --name my-kafka --namespace kafka incubator/kafka
+```
+
+## istio 설치
+```console
+curl -L https://git.io/getLatestIstio | ISTIO_VERSION=1.4.5 sh -
+cd istio-1.4.5
+export PATH=$PWD/bin:$PATH
+for i in install/kubernetes/helm/istio-init/files/crd*yaml; do kubectl apply -f $i; done
+kubectl apply -f install/kubernetes/istio-demo.yaml
+kubectl get pod -n istio-system
+```
+
+## kiali 설치
+- kiali.yaml
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: kiali
+  namespace: istio-system
+  labels:
+    app: kiali
+type: Opaque
+data:
+  username: YWRtaW4=
+  passphrase: YWRtaW4=
+```
+```console
+kubectl apply -f kiali.yaml
+helm template --set kiali.enabled=true install/kubernetes/helm/istio --name istio --namespace istio-system > kiali_istio.yaml    
+kubectl apply -f kiali_istio.yaml
+```
+- load balancer로 service type 변경
+```console
+kubectl edit service/kiali -n istio-system
+(ClusterIP -> LoadBalancer)
+```
+
+## CLEAN namespace 생성
+```console
+kubectl create namespace clean
+```
+
+## CLEAN istio injection 설정
+```console
+kubectl label namespace clean istio-injection=enabled
+```
+
+## CLEAN image build & push
+(TBD)
+
+## CLEAN deploy
+cd clean/yaml
+kubectl apply -f reservation.yaml
+kubectl apply -f gateway.yaml
+kubectl apply -f clean.yaml
+kubectl apply -f payment.yaml
+kubectl apply -f mypage.yaml
+kubectl apply -f message.yaml
+kubectl apply -f siege.yaml
+
+## CLEAN gateway service type 변경
+```console
+$ kubectl edit service/gateway -n clean
+(ClusterIP -> LoadBalancer)
+```
+
 ## DDD 의 적용
 
 ## 동기식 호출 과 Fallback 처리
