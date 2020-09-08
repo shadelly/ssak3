@@ -19,7 +19,6 @@ http POST http://localhost:8082/cleans status=CleaningStarted requestId=1 cleanD
 
 <azure 초기 셋팅>
 git config --global user.name "dragon-skcc"
-
 git config --global user.email "dragon.skcc@gmail.com"
 
 git remote add origin https://github.com/dragon-skcc/ssak3.git
