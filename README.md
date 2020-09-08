@@ -295,13 +295,12 @@ public class CleaningReservation {
 $ kubectl delete -f payment.yaml
 
 NAME                           READY   STATUS    RESTARTS   AGE
-pod/alarm-bc469c66b-nn7r9      2/2     Running   0          14m
-pod/booking-6f85b67876-rhwl2   2/2     Running   0          14m
-pod/gateway-7bd59945-g9hdq     2/2     Running   0          14m
-pod/html-78f648d5b-zhv2b       2/2     Running   0          14m
-pod/mypage-7587b7598b-l86jl    2/2     Running   0          14m
-pod/room-6c8cff5b96-78chb      2/2     Running   0          14m
-pod/siege                      2/2     Running   0          14m
+cleaning-bf474f568-vxl8r       2/2     Running   0          137m
+dashboard-7f7768bb5-7l8wr      2/2     Running   0          136m
+gateway-6dfcbbc84f-rwnsh       2/2     Running   0          37m
+message-69597f6864-mhwx7       2/2     Running   0          137m
+reservation-775fc6574d-kddgd   2/2     Running   0          144m
+siege                          2/2     Running   0          3h39m
 
 # 예약처리 (siege 에서)
 http POST http://reservation:8080/cleaningReservations requestDate=20200907 place=seoul status=ReservationApply price=250000 customerName=chae #Fail
@@ -310,17 +309,17 @@ http POST http://reservation:8080/cleaningReservations requestDate=20200909 plac
 # 예약처리 시 에러 내용
 HTTP/1.1 500 Internal Server Error
 content-type: application/json;charset=UTF-8
-date: Wed, 05 Aug 2020 00:58:04 GMT
+date: Tue, 08 Sep 2020 15:51:34 GMT
 server: envoy
 transfer-encoding: chunked
-x-envoy-upstream-service-time: 188
+x-envoy-upstream-service-time: 87
 
 {
     "error": "Internal Server Error",
     "message": "Could not commit JPA transaction; nested exception is javax.persistence.RollbackException: Error while committing the transaction",
-    "path": "/bookings",
+    "path": "/cleaningReservations",
     "status": 500,
-    "timestamp": "2020-08-05T00:58:05.047+0000"
+    "timestamp": "2020-09-08T15:51:34.959+0000"
 }
 
 # 결제서비스 재기동전에 아래의 비동기식 호출 기능 점검 테스트 수행 (siege 에서)
@@ -328,23 +327,32 @@ http DELETE http://reservation:8080/reservations/1 #Success
 
 # 결과
 root@siege:/# http DELETE http://reservation:8080/reservations/1
-HTTP/1.1 204 No Content
-date: Wed, 05 Aug 2020 00:59:03 GMT
+HTTP/1.1 404 Not Found
+content-type: application/hal+json;charset=UTF-8
+date: Tue, 08 Sep 2020 15:52:46 GMT
 server: envoy
-x-envoy-upstream-service-time: 35
+transfer-encoding: chunked
+x-envoy-upstream-service-time: 16
+
+{
+    "error": "Not Found",
+    "message": "No message available",
+    "path": "/reservations/1",
+    "status": 404,
+    "timestamp": "2020-09-08T15:52:46.971+0000"
+}
 
 # 결제서비스 재기동
 $ kubectl apply -f payment.yaml
 
 NAME                           READY   STATUS    RESTARTS   AGE
-pod/alarm-bc469c66b-nn7r9      2/2     Running   0          18m
-pod/booking-6f85b67876-rhwl2   2/2     Running   0          18m
-pod/gateway-7bd59945-g9hdq     2/2     Running   0          18m
-pod/html-78f648d5b-zhv2b       2/2     Running   0          18m
-pod/mypage-7587b7598b-l86jl    2/2     Running   0          18m
-pod/pay-755d679cbf-7l7dq       2/2     Running   0          84s
-pod/room-6c8cff5b96-78chb      2/2     Running   0          18m
-pod/siege                      2/2     Running   0          17m
+cleaning-bf474f568-vxl8r       2/2     Running   0          147m
+dashboard-7f7768bb5-7l8wr      2/2     Running   0          145m
+gateway-6dfcbbc84f-rwnsh       2/2     Running   0          47m
+message-69597f6864-mhwx7       2/2     Running   0          147m
+payment-7749f7dc7c-kfjxb       2/2     Running   0          88s
+reservation-775fc6574d-kddgd   2/2     Running   0          153m
+siege                          2/2     Running   0          3h48m
 
 
 # 예약처리 (siege 에서)
@@ -354,28 +362,26 @@ http POST http://reservation:8080/cleaningReservations requestDate=20200909 plac
 # 처리결과
 HTTP/1.1 201 Created
 content-type: application/json;charset=UTF-8
-date: Wed, 05 Aug 2020 01:01:54 GMT
-location: http://booking:8080/bookings/3
+date: Tue, 08 Sep 2020 15:58:28 GMT
+location: http://reservation:8080/cleaningReservations/5
 server: envoy
 transfer-encoding: chunked
-x-envoy-upstream-service-time: 326
+x-envoy-upstream-service-time: 113
 
 {
     "_links": {
-        "booking": {
-            "href": "http://booking:8080/bookings/3"
+        "cleaningReservation": {
+            "href": "http://reservation:8080/cleaningReservations/5"
         },
         "self": {
-            "href": "http://booking:8080/bookings/3"
+            "href": "http://reservation:8080/cleaningReservations/5"
         }
     },
-    "address": "서울",
-    "guest": "배트맨",
-    "host": "Superman",
-    "name": "호텔",
-    "price": 1000,
-    "roomId": 1,
-    "usedate": "20201010"
+    "customerName": "noh",
+    "place": "pangyo",
+    "price": 300000,
+    "requestDate": "20200909",
+    "status": "ReservationApply"
 }
 ```
 - 과도한 요청시에 서비스 장애가 도미노 처럼 벌어질 수 있다 (서킷브레이커, 폴백 처리는 운영단계에서 설명)
@@ -511,28 +517,83 @@ http POST http://reservation:8080/cleaningReservations requestDate=20200909 plac
 # 알림이력 확인 (siege 에서)
 http http://message:8080/messages # 알림이력조회 불가
 
+http: error: ConnectionError: HTTPConnectionPool(host='message', port=8080): Max retries exceeded with url: /messages (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7fae6595deb8>: Failed to establish a new connection: [Errno -2] Name or service not known')) while doing GET request to URL: http://message:8080/messages
+
 # 알림 서비스 기동
 kubectl apply -f message.yaml
 
 # 알림이력 확인 (siege 에서)
 http http://message:8080/messages # 알림이력조회
+
+HTTP/1.1 200 OK
+content-type: application/hal+json;charset=UTF-8
+date: Tue, 08 Sep 2020 16:01:45 GMT
+server: envoy
+transfer-encoding: chunked
+x-envoy-upstream-service-time: 439
+
+{
+    "_embedded": {
+        "messages": [
+            {
+                "_links": {
+                    "message": {
+                        "href": "http://message:8080/messages/1"
+                    },
+                    "self": {
+                        "href": "http://message:8080/messages/1"
+                    }
+                },
+                "requestId": 6,
+                "status": "PaymentCompleted"
+            },
+            {
+                "_links": {
+                    "message": {
+                        "href": "http://message:8080/messages/2"
+                    },
+                    "self": {
+                        "href": "http://message:8080/messages/2"
+                    }
+                },
+                "requestId": 7,
+                "status": "PaymentCompleted"
+            }
+        ]
+    },
+    "_links": {
+        "profile": {
+            "href": "http://message:8080/profile/messages"
+        },
+        "self": {
+            "href": "http://message:8080/messages{?page,size,sort}",
+            "templated": true
+        }
+    },
+    "page": {
+        "number": 0,
+        "size": 20,
+        "totalElements": 2,
+        "totalPages": 1
+    }
+}
 ```
 
 # 운영
-```console
-```
+
 ## CI/CD 설정
   * 각 구현체들은 github의 각각의 source repository 에 구성
   * Image repository는 Azure 사용
-```console
-```
+
 ## 동기식 호출 / 서킷 브레이킹 / 장애격리
 
 ### 방식1) 서킷 브레이킹 프레임워크의 선택: istio-injection + DestinationRule
 
-* istio-injection 적용 (기 적용완료) ####수정필요####
+* istio-injection 적용 (기 적용완료)
 ```
 kubectl label namespace ssak3 istio-injection=enabled
+
+# error: 'istio-injection' already has a value (enabled), and --overwrite is false
 ```
 * 예약, 결제 서비스 모두 아무런 변경 없음
 
@@ -540,7 +601,40 @@ kubectl label namespace ssak3 istio-injection=enabled
 - 동시사용자 100명
 - 60초 동안 실시
 ```console
+siege -v -c100 -t60S -r10 --content-type "application/json" 'http://reservation:8080/reservations POST {"customerName": "noh","price": 300000,"requestDate": "20200909","status": "ReservationApply"}'
+
+HTTP/1.1 404     0.49 secs:     133 bytes ==> POST http://reservation:8080/reservations
+HTTP/1.1 404     0.46 secs:     133 bytes ==> POST http://reservation:8080/reservations
+HTTP/1.1 404     0.44 secs:     133 bytes ==> POST http://reservation:8080/reservations
+HTTP/1.1 404     0.49 secs:     133 bytes ==> POST http://reservation:8080/reservations
+HTTP/1.1 404     0.07 secs:     133 bytes ==> POST http://reservation:8080/reservations
+HTTP/1.1 404     0.34 secs:     133 bytes ==> POST http://reservation:8080/reservations
+HTTP/1.1 404     0.46 secs:     133 bytes ==> POST http://reservation:8080/reservations
+HTTP/1.1 404     0.33 secs:     133 bytes ==> POST http://reservation:8080/reservations
+HTTP/1.1 404     0.47 secs:     133 bytes ==> POST http://reservation:8080/reservations
+HTTP/1.1 404     0.48 secs:     133 bytes ==> POST http://reservation:8080/reservations
+HTTP/1.1 404     0.37 secs:     133 bytes ==> POST http://reservation:8080/reservations
+HTTP/1.1 404     0.25 secs:     133 bytes ==> POST http://reservation:8080/reservations
+
+Lifting the server siege...
+Transactions:                  17981 hits
+Availability:                 100.00 %
+Elapsed time:                  59.33 secs
+Data transferred:               2.28 MB
+Response time:                  0.32 secs
+Transaction rate:             303.07 trans/sec
+Throughput:                     0.04 MB/sec
+Concurrency:                   96.44
+Successful transactions:           0
+Failed transactions:               0
+Longest transaction:            2.63
+Shortest transaction:           0.00
+
+HTTP/1.1 404     0.60 secs:     133 bytes ==> POST http://reservation:8080/reservations
+
 ```
+* 서킷 브레이킹을 위한 DestinationRule 적용
+
 ## 오토스케일 아웃
 앞서 CB 는 시스템을 안정되게 운영할 수 있게 해줬지만 사용자의 요청을 100% 받아들여주지 못했기 때문에 이에 대한 보완책으로 자동화된 확장 기능을 적용하고자 함
 * (istio injection 적용한 경우) istio injection 적용 해제
