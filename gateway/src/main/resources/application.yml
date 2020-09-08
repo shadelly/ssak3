@@ -8,23 +8,23 @@ spring:
   cloud:
     gateway:
       routes:
-        - id: Reservation
+        - id: reservation
           uri: http://localhost:8081
           predicates:
             - Path=/cleaningReservations/** 
-        - id: Cleaning
+        - id: cleaning
           uri: http://localhost:8082
           predicates:
             - Path=/cleans/** 
-        - id: Payment
+        - id: payment
           uri: http://localhost:8083
           predicates:
             - Path=/payments/** 
-        - id: DashBoard
+        - id: dashBoard
           uri: http://localhost:8084
           predicates:
             - Path= /dashBoardViews/**
-        - id: Message
+        - id: message
           uri: http://localhost:8085
           predicates:
             - Path=/messages/** 
