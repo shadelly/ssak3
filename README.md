@@ -70,8 +70,8 @@
 * 청소업체의 청소결과, 예약의 예약관리, 결제의 결제이력, 알림의 알림이력, 마이페이지는 그와 연결된 command 와 event 들에 의하여 트랜잭션이 유지되어야 하는 단위로 그들 끼리 묶어줌
    
 ### 바운디드 컨텍스트로 묶기
-  ![10](https://user-images.githubusercontent.com/69634194/92385705-4c1d8400-f14d-11ea-9c89-ae82b5c60900.png)
-
+  ![10](https://user-images.githubusercontent.com/36612394/92478750-95d59f80-f21d-11ea-813e-3e4e3050b7f5.png)
+  
 * 도메인 서열 분리 
   - Core Domain: 예약 
      - 없어서는 안될 핵심 서비스이며, 연간 Up-time SLA 수준을 99.999% 목표, 배포주기는 예약의 경우 1주일 1회 미만, 청소업체의 경우 1개월 1회 미만
@@ -82,8 +82,8 @@
   
   
 ### 폴리시 부착 
-  ![11](https://user-images.githubusercontent.com/69634194/92385708-4c1d8400-f14d-11ea-99f3-10f79ce24f50.png)
-    
+  ![11](https://user-images.githubusercontent.com/36612394/92478754-966e3600-f21d-11ea-81ae-60cce97e2551.png)
+      
 ### 폴리시의 이동과 컨텍스트 매핑 (빨강은 Pub/Sub, 파랑은 Req/Resp)
   ![12](https://user-images.githubusercontent.com/69634194/92385709-4cb61a80-f14d-11ea-9389-c12ab4ef48e2.png)
     

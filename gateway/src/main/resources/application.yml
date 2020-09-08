@@ -8,23 +8,23 @@ spring:
   cloud:
     gateway:
       routes:
-        - id: Reservation
+        - id: reservation
           uri: http://localhost:8081
           predicates:
             - Path=/cleaningReservations/** 
-        - id: Cleaning
+        - id: cleaning
           uri: http://localhost:8082
           predicates:
             - Path=/cleans/** 
-        - id: Payment
+        - id: payment
           uri: http://localhost:8083
           predicates:
             - Path=/payments/** 
-        - id: DashBoard
+        - id: dashBoard
           uri: http://localhost:8084
           predicates:
             - Path= /dashBoardViews/**
-        - id: Message
+        - id: message
           uri: http://localhost:8085
           predicates:
             - Path=/messages/** 
@@ -47,24 +47,24 @@ spring:
   cloud:
     gateway:
       routes:
-        - id: Reservation
-          uri: http://Reservation:8080
+        - id: reservation
+          uri: http://reservation:8080
           predicates:
             - Path=/cleaningReservations/** 
-        - id: Cleaning
-          uri: http://Cleaning:8080
+        - id: cleaning
+          uri: http://cleaning:8080
           predicates:
             - Path=/cleans/** 
-        - id: Payment
-          uri: http://Payment:8080
+        - id: payment
+          uri: http://payment:8080
           predicates:
             - Path=/payments/** 
-        - id: DashBoard
-          uri: http://DashBoard:8080
+        - id: dashBoard
+          uri: http://dashBoard:8080
           predicates:
             - Path= /dashBoardViews/**
-        - id: Message
-          uri: http://Message:8080
+        - id: message
+          uri: http://message:8080
           predicates:
             - Path=/messages/** 
       globalcors:
