@@ -210,6 +210,7 @@ kubectl label namespace clean istio-injection=enabled
 (TBD)
 
 ## CLEAN deploy
+```console
 cd clean/yaml
 kubectl apply -f reservation.yaml
 kubectl apply -f gateway.yaml
@@ -218,6 +219,7 @@ kubectl apply -f payment.yaml
 kubectl apply -f mypage.yaml
 kubectl apply -f message.yaml
 kubectl apply -f siege.yaml
+```
 
 ## CLEAN gateway service type 변경
 ```console
