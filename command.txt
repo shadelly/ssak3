@@ -18,18 +18,36 @@ http GET http://cleaning:8080/cleans
 http GET http://message:8080/messages
 http GET http://dashBoard:8080/dashBoardViews
 
+http GET http://localhost:8088/cleaningReservations
+
+http GET http://20.196.72.75:8080/cleaningReservations
+http GET http://20.196.72.75:8080/payments
+http GET http://20.196.72.75:8080/cleans
+http GET http://20.196.72.75:8080/messages
+http GET http://20.196.72.75:8080/dashBoardViews
+
 //예약
 http POST http://localhost:8081/cleaningReservations requestDate=20200907 place=seoul status=ReservationApply price=2000 customerName=yeon
-
+//sieze
 http POST http://reservation:8080/cleaningReservations requestDate=20200907 place=seoul status=ReservationApply price=2000 customerName=yeon
+//gateway
+http POST http://20.196.72.75:8080/cleaningReservations requestDate=20200907 place=seoul status=ReservationApply price=2000 customerName=yeon
+
 //예약취소
 http DELETE http://localhost:8081/cleaningReservations/1
-
+//sieze
 http DELETE http://reservation:8080/cleaningReservations/1
+//gateway
+http DELETE http://20.196.72.75:8080/cleaningReservations/1
 
 //청소
 http POST http://localhost:8082/cleans status=CleaningStarted requestId=1 cleanDate=20200909
-
+//sieze
 http POST http://cleaning:8080/cleans status=CleaningStarted requestId=1 cleanDate=20200909
+//gateway
+http POST http://20.196.72.75:8080/cleans status=CleaningStarted requestId=1 cleanDate=20200909
+
+
+
 
 az login -u TeamA@gkn2019hotmail.onmicrosoft.com -p skcc1234!!
