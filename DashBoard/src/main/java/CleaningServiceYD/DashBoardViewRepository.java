@@ -8,7 +8,6 @@ import java.util.List;
 public interface DashBoardViewRepository extends CrudRepository<DashBoardView, Long> {
 
     List<DashBoardView> findByRequestId(Long requestId);
-    List<DashBoardView> findByRequestId(Long requestId);
 
         void deleteByRequestId(Long requestId);
 }

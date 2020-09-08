@@ -23,14 +23,12 @@ public class Clean {
     @PostPersist
     public void onPostPersist(){
         CleaningConfirmed cleaningConfirmed = new CleaningConfirmed();
+        BeanUtils.copyProperties(this, cleaningConfirmed);
 
         cleaningConfirmed.setRequestId(getRequestId());
-        cleaningConfirmed.setStatus("cleaningCompleted");
+        cleaningConfirmed.setStatus("CleaningCompleted");
         cleaningConfirmed.setCleanDate(getCleanDate());
-
-        BeanUtils.copyProperties(this, cleaningConfirmed);
         cleaningConfirmed.publishAfterCommit();
-
     }
 
 

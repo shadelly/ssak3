@@ -18,18 +18,15 @@ public class DashBoardViewViewHandler {
     private DashBoardViewRepository dashBoardViewRepository;
 
     @StreamListener(KafkaProcessor.INPUT)
-    public void whenCleaningRequested_then_CREATE_1 (@Payload CleaningRequested cleaningRequested) {
+    public void whenPayConfirmed_then_CREATE_1 (@Payload PayConfirmed payConfirmed) {
         try {
-            if (cleaningRequested.isMe()) {
+            if (payConfirmed.isMe()) {
                 // view 객체 생성
                 DashBoardView dashBoardView = new DashBoardView();
                 // view 객체에 이벤트의 Value 를 set 함
-                dashBoardView.setRequestId(cleaningRequested.getRequestId());
-                dashBoardView.setRequestDate(cleaningRequested.getRequestDate());
-                dashBoardView.setPlace(cleaningRequested.getPlace());
-                dashBoardView.setStatus(cleaningRequested.getStatus());
-                dashBoardView.setPrice(cleaningRequested.getPrice());
-                dashBoardView.setCustomerName(cleaningRequested.getCostomerName());
+                dashBoardView.setRequestId(payConfirmed.getRequestId());
+                dashBoardView.setStatus(payConfirmed.getStatus());
+                dashBoardView.setPrice(payConfirmed.getPrice());
                 // view 레파지 토리에 save
                 dashBoardViewRepository.save(dashBoardView);
             }
@@ -40,15 +37,14 @@ public class DashBoardViewViewHandler {
 
 
     @StreamListener(KafkaProcessor.INPUT)
-    public void whenPayConfirmed_then_UPDATE_1(@Payload PayConfirmed payConfirmed) {
+    public void whenPayCancelConfirmed_then_UPDATE_1(@Payload PayCancelConfirmed payCancelConfirmed) {
         try {
-            if (payConfirmed.isMe()) {
+            if (payCancelConfirmed.isMe()) {
                 // view 객체 조회
-                List<DashBoardView> dashBoardViewList = dashBoardViewRepository.findByRequestId(payConfirmed.getRequestId());
+                List<DashBoardView> dashBoardViewList = dashBoardViewRepository.findByRequestId(payCancelConfirmed.getRequestId());
                 for(DashBoardView dashBoardView : dashBoardViewList){
                     // view 객체에 이벤트의 eventDirectValue 를 set 함
-                    dashBoardView.setStatus(payConfirmed.getStatus());
-                    dashBoardView.setPrice(payConfirmed.getPrice());
+                    dashBoardView.setStatus(payCancelConfirmed.getStatus());
                     // view 레파지 토리에 save
                     dashBoardViewRepository.save(dashBoardView);
                 }
