@@ -8,9 +8,13 @@ git clone https://github.com/dragon-skcc/ssak3.git
 git status
 ```
 
-## 서버에서 Build
+## Jupyter
+```console
+https://20.194.23.7:8888
+skccadmin
+```
 
-## Kubenetis install
+## Kubectl install
 ```console
 sudo apt-get update && sudo apt-get install -y apt-transport-https
 curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
@@ -18,33 +22,117 @@ echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/
 sudo apt-get update
 sudo apt-get install -y kubectl
 ```
+
 ## Azure-Cli  install
 ```console
 # curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-# az login -u dragon.skcc@gmail.com -p skccadmin!1
+# az login -u  -p
 ```
 
 ## Azure Configure
 ```console
-- Azure (http://portal.azure.com) : dragon.skcc@gmail.com
+- Azure (http://portal.azure.com) : TeamA@gkn2019hotmail.onmicrosoft.com
 - AZure 포탈에서 리소스 그룹 > 쿠버네티스 서비스 생성 > 컨테이너 레지스트리 생성
-- 리소스 그룹 생성 : dragon-rg
-- 컨테이너 생성( Kubernetes ) : dragonAKS
-- 레지스트리 생성 : dragonacr, dragonacr.azurecr.io
+- 리소스 그룹 생성 : ssak3-rg
+- 컨테이너 생성( Kubernetes ) : ssak3-aks
+- 레지스트리 생성 : ssak3acr, ssak3acr.azurecr.io
 ```
 
 ## Azure 인증
 ```console
 # az account set --subscription "XXX"
-# az aks get-credentials --resource-group ssak3-rg --name dragon.skcc@gmail.com
-# az acr login --name dragon.skcc@gmail.com
+# az aks get-credentials --resource-group ssak3-rg --name ssak3-aks
+# az acr login --name ssak3aacr --expose-token
 
 ```
 
 ## Azure AKS와 ACR 연결
 ```console
-az aks update -n admin4-aks -g admin4-resourcegroup --attach-acr admin4
+az aks update -n ssak3-aks -g ssak3-rg --attach-acr ssak3acr
 ```
+
+## kubectl로 확인
+```console
+kubectl config current-context
+kubectl get all
+```
+
+## jdk설치
+```console
+sudo apt-get update
+sudo apt install default-jdk
+[bash에 환경변수 추가]
+1. cd ~
+2. nano .bashrc 
+3. 편집기 맨 아래로 이동
+4. (JAVA_HOME 설정 및 실행 Path 추가)
+export JAVA_HOME=‘/usr/lib/jvm/java-11-openjdk-amd64
+export PATH=$PATH:$JAVA_HOME/bin:.
+
+ctrl + x, y 입력, 종료
+source ~/.bashrc
+5. 설치확인
+echo $JAVA_HOME
+java -version
+
+```
+
+## 리눅스에 Docker client 설치
+```console
+sudo apt-get update
+sudo apt install apt-transport-https ca-certificates curl software-properties-common
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add 
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
+sudo apt update
+sudo apt install docker-ce
+# 리눅스 설치시 생성한 사용자 명 입력
+sudo usermod -aG docker skccadmin
+```
+
+## 리눅스에 docker demon install
+```console
+sudo apt-get update
+sudo apt-get install \
+     apt-transport-https \
+     ca-certificates \
+     curl \
+     gnupg-agent \
+     software-properties-common
+
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo apt-key fingerprint 0EBFCD88
+
+sudo add-apt-repository \
+     "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+     $(lsb_release -cs) \
+     stable"
+
+sudo apt-get update
+sudo apt-get install docker-ce docker-ce-cli containerd.io
+
+
+(demon server 시작)
+sudo service docker start
+(확인)
+docker version
+sudo docker run hello-world
+
+```
+
+## docker hub 계정로그인
+ID : dragonskcc
+
+## Docker demon과 Docker client 연결
+```console
+cd
+nano .bashrc
+맨아래 줄에 아래 환경변수 추가
+방향키로 맨 아래까지 내린 다음, 새로운 행에 아래 내용 입력
+export DOCKER_HOST=tcp://0.0.0.0:2375 
+저장 & 종료 : Ctrl + x, 입력 후, y 입력  후 엔터
+source ~/.bashrc
+```
+
 
 ## Kafka install (kubernetes/helm)
 참고 - (https://workflowy.com/s/msa/27a0ioMCzlpV04Ib#/a7018fb8c62)
@@ -67,7 +155,7 @@ helm install --name my-kafka --namespace kafka incubator/kafka
 helm del my-kafka  --purge
 ```
 
-## Lab. Istio 설치
+## Istio 설치
 ```console
 curl -L https://git.io/getLatestIstio | ISTIO_VERSION=1.4.5 sh -
 cd istio-1.4.5
@@ -78,7 +166,6 @@ kubectl get pod -n istio-system
 ```
 
 ## kiali 설치
-- 에러발생, 위의 istio 설치에서 완료됨
 ```console
 
 vi kiali.yaml    
