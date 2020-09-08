@@ -1,4 +1,6 @@
-## MSAEZ 소스 다운로드
+## zoom 회의 ID 
+833 1429 7004
+
 
 ## Git
 ```console
@@ -40,9 +42,9 @@ sudo apt-get install -y kubectl
 
 ## Azure 인증
 ```console
-# az account set --subscription "XXX"
+# az login
 # az aks get-credentials --resource-group ssak3-rg --name ssak3-aks
-# az acr login --name ssak3aacr --expose-token
+# az acr login --name ssak3acr --expose-token
 
 ```
 
@@ -155,14 +157,21 @@ helm install --name my-kafka --namespace kafka incubator/kafka
 helm del my-kafka  --purge
 ```
 
+
 ## Istio 설치
 ```console
+kubectl create namespace istio-system
+
 curl -L https://git.io/getLatestIstio | ISTIO_VERSION=1.4.5 sh -
 cd istio-1.4.5
 export PATH=$PWD/bin:$PATH
 for i in install/kubernetes/helm/istio-init/files/crd*yaml; do kubectl apply -f $i; done
 kubectl apply -f install/kubernetes/istio-demo.yaml
 kubectl get pod -n istio-system
+```
+## namespace create
+```console
+kubectl create namespace ssak3
 ```
 
 ## kiali 설치
@@ -194,21 +203,18 @@ kubectl edit service/kiali -n istio-system
 (ClusterIP -> LoadBalancer)
 ```
 
-## namespace create
-```console
-kubectl create namespace clean
-```
+
 
 - istio enabled
 ```console
-kubectl label namespace clean istio-injection=enabled
+kubectl label namespace ssak3 istio-injection=enabled
 ```
 
 ## siege deploy
 ```console
 cd clean/yaml
 kubectl apply -f siege.yaml 
-kubectl exec -it siege -n clean -- /bin/bash
+kubectl exec -it siege -n ssak3 -- /bin/bash
 apt-get update
 apt-get install httpie
 ```
