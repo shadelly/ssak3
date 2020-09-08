@@ -10,6 +10,10 @@ git clone https://github.com/dragon-skcc/ssak3.git
 git status
 ```
 
+## ssak3 external IP
+- gateway 52.141.27.193:8080
+- kiali 20.41.120.4:20001
+
 ## Jupyter
 ```console
 https://20.194.23.7:8888
@@ -17,7 +21,7 @@ skccadmin
 ```
 
 ## Kubectl install
-```console
+```
 sudo apt-get update && sudo apt-get install -y apt-transport-https
 curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
 echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
@@ -38,6 +42,8 @@ sudo apt-get install -y kubectl
 - 리소스 그룹 생성 : ssak3-rg
 - 컨테이너 생성( Kubernetes ) : ssak3-aks
 - 레지스트리 생성 : ssak3acr, ssak3acr.azurecr.io
+- azure container repository 이름 : cleaning
+- container registry image : ssak3acr.azurecr.io/reservation, payment....
 ```
 
 ## Azure 인증
@@ -169,10 +175,6 @@ for i in install/kubernetes/helm/istio-init/files/crd*yaml; do kubectl apply -f 
 kubectl apply -f install/kubernetes/istio-demo.yaml
 kubectl get pod -n istio-system
 ```
-## namespace create
-```console
-kubectl create namespace ssak3
-```
 
 ## kiali 설치
 ```console
@@ -203,7 +205,10 @@ kubectl edit service/kiali -n istio-system
 (ClusterIP -> LoadBalancer)
 ```
 
-
+## namespace create
+```console
+kubectl create namespace ssak3
+```
 
 - istio enabled
 ```console
@@ -212,7 +217,7 @@ kubectl label namespace ssak3 istio-injection=enabled
 
 ## siege deploy
 ```console
-cd clean/yaml
+cd ssak3/yaml
 kubectl apply -f siege.yaml 
 kubectl exec -it siege -n ssak3 -- /bin/bash
 apt-get update
