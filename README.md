@@ -781,23 +781,65 @@ kubectl delete horizontalpodautoscaler.autoscaling/payment -n ssak3
 ```
 - seige 로 배포작업 직전에 워크로드를 모니터링 함.
 ```console
-siege -v -c1 -t30S -r10 --content-type "application/json" 'http://reservation:8080/cleaningReservations POST {"customerName": "noh","price": 300000,"requestDate": "20200909","status": "ReservationApply"}'
+siege -v -c1 -t120S -r10 --content-type "application/json" 'http://reservation:8080/cleaningReservations POST {"customerName": "noh","price": 300000,"requestDate": "20200909","status": "ReservationApply"}'
 ```
 - 새버전으로의 배포 시작
 ```
 # 컨테이너 이미지 Update (readness, liveness 미설정 상태)
-kubectl apply -f booking_na.yaml
+kubectl apply -f reservation_na.yaml
 ```
 - seige 의 화면으로 넘어가서 Availability 가 100% 미만으로 떨어졌는지 확인
 ```
+Lifting the server siege...
+Transactions:                  22984 hits
+Availability:                  98.68 %
+Elapsed time:                 299.64 secs
+Data transferred:               7.52 MB
+Response time:                  0.01 secs
+Transaction rate:              76.71 trans/sec
+Throughput:                     0.03 MB/sec
+Concurrency:                    0.97
+Successful transactions:       22984
+Failed transactions:             308
+Longest transaction:            0.97
+Shortest transaction:           0.00
 
 ```
 
 - 배포기간중 Availability 가 평소 100%에서 70% 대로 떨어지는 것을 확인. 
 - 원인은 쿠버네티스가 성급하게 새로 올려진 서비스를 READY 상태로 인식하여 서비스 유입을 진행한 것이기 때문. 이를 막기위해 Readiness Probe 를 설정함:
+```console
 # deployment.yaml 의 readiness probe 의 설정:
-- kubectl apply -f booking.yaml 실행
+kubectl apply -f reservation.yaml
 
+NAME                               READY   STATUS    RESTARTS   AGE
+pod/cleaning-bf474f568-vxl8r       2/2     Running   0          4h3m
+pod/dashboard-7f7768bb5-7l8wr      2/2     Running   0          4h1m
+pod/gateway-6dfcbbc84f-rwnsh       2/2     Running   0          143m
+pod/message-69597f6864-fjs69       2/2     Running   0          92m
+pod/payment-7749f7dc7c-kfjxb       2/2     Running   0          97m
+pod/reservation-775fc6574d-nfnxx   1/1     Running   0          3m54s
+pod/siege                          2/2     Running   0          5h24m
+
+```
+- 동일한 시나리오로 재배포 한 후 Availability 확인
+```
+Lifting the server siege...
+Transactions:                   6663 hits
+Availability:                 100.00 %
+Elapsed time:                 119.51 secs
+Data transferred:               2.17 MB
+Response time:                  0.02 secs
+Transaction rate:              55.75 trans/sec
+Throughput:                     0.02 MB/sec
+Concurrency:                    0.98
+Successful transactions:        6663
+Failed transactions:               0
+Longest transaction:            0.86
+Shortest transaction:           0.00
+```
+
+- 배포기간 동안 Availability 가 변화없기 때문에 무정지 재배포가 성공한 것으로 확인됨.
 
 ## ConfigMap 사용
 - 시스템별로 또는 운영중에 동적으로 변경 가능성이 있는 설정들을 ConfigMap을 사용하여 관리합니다.
