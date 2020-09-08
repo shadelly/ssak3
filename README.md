@@ -225,16 +225,13 @@ public interface PaymentRepository extends PagingAndSortingRepository<Payment, L
 ```
 kubectl exec -it siege -n cleaning -- /bin/bash
 ```
-- (siege 에서) 적용 후 REST API 테스트 ##### 수정필요 ###### 
+- (siege 에서) 적용 후 REST API 테스트 
 ```
-# 숙소 서비스의 등록처리
-http POST http://room:8080/rooms name=호텔 price=1000 address=서울 host=Superman
-
-# 예약 서비스의 예약처리
-http POST http://booking:8080/bookings roomId=1 name=호텔 price=1000 address=서울 host=Superman guest=배트맨 usedate=20201010
+# 청소 서비스 예약요청 처리
+http POST http://reservation:8081/cleaningReservations requestDate=20200907 place=seoul status=ReservationApply price=2000 customerName=yeon
 
 # 예약 상태 확인
-http http://booking:8080/bookings/1
+http http://reservation:8081/reservations/1
 ```
 
 ## 폴리글랏 퍼시스턴스
@@ -294,8 +291,8 @@ public class CleaningReservation {
 
 - (##### 수정필요 ####) 호출 시간에 따른 타임 커플링이 발생하며, 결제 시스템이 장애가 나면 주문도 못받는다는 것을 확인
 ```
-# 결제 서비스를 잠시 내려놓음 (ctrl+c)
-$ kubectl delete -f pay.yaml
+# 결제 서비스를 잠시 내려놓음
+$ kubectl delete -f payment.yaml
 
 NAME                           READY   STATUS    RESTARTS   AGE
 pod/alarm-bc469c66b-nn7r9      2/2     Running   0          14m
