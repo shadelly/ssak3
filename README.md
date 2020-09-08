@@ -304,8 +304,8 @@ pod/room-6c8cff5b96-78chb      2/2     Running   0          14m
 pod/siege                      2/2     Running   0          14m
 
 # 예약처리 (siege 에서)
-http POST http://booking:8080/bookings roomId=1 name=호텔 price=1000 address=서울 host=Superman guest=배트맨 usedate=20201010 #Fail
-http POST http://booking:8080/bookings roomId=2 name=펜션 price=1000 address=양평 host=Superman guest=홍길동 usedate=20201011 #Fail
+http POST http://reservation:8080/cleaningReservations requestDate=20200907 place=seoul status=ReservationApply price=250000 customerName=chae #Fail
+http POST http://reservation:8080/cleaningReservations requestDate=20200909 place=pangyo status=ReservationApply price=300000 customerName=noh #Fail
 
 # 예약처리 시 에러 내용
 HTTP/1.1 500 Internal Server Error
@@ -324,16 +324,17 @@ x-envoy-upstream-service-time: 188
 }
 
 # 결제서비스 재기동전에 아래의 비동기식 호출 기능 점검 테스트 수행 (siege 에서)
-http DELETE http://booking:8080/bookings/1 #Success
+http DELETE http://reservation:8080/reservations/1 #Success
+
 # 결과
-root@siege:/# http DELETE http://booking:8080/bookings/1
+root@siege:/# http DELETE http://reservation:8080/reservations/1
 HTTP/1.1 204 No Content
 date: Wed, 05 Aug 2020 00:59:03 GMT
 server: envoy
 x-envoy-upstream-service-time: 35
 
 # 결제서비스 재기동
-$ kubectl apply -f pay.yaml
+$ kubectl apply -f payment.yaml
 
 NAME                           READY   STATUS    RESTARTS   AGE
 pod/alarm-bc469c66b-nn7r9      2/2     Running   0          18m
@@ -347,8 +348,8 @@ pod/siege                      2/2     Running   0          17m
 
 
 # 예약처리 (siege 에서)
-http POST http://booking:8080/bookings roomId=1 name=호텔 price=1000 address=서울 host=Superman guest=배트맨 usedate=20201010 #Success
-http POST http://booking:8080/bookings roomId=2 name=펜션 price=1000 address=양평 host=Superman guest=홍길동 usedate=20201011 #Success
+http POST http://reservation:8080/cleaningReservations requestDate=20200907 place=seoul status=ReservationApply price=250000 customerName=chae #Success
+http POST http://reservation:8080/cleaningReservations requestDate=20200909 place=pangyo status=ReservationApply price=300000 customerName=noh #Success
 
 # 처리결과
 HTTP/1.1 201 Created
@@ -377,7 +378,7 @@ x-envoy-upstream-service-time: 326
     "usedate": "20201010"
 }
 ```
-- 과도한 요청시에 서비스 장애가 도미노 처럼 벌어질 수 있다 (서킷브레이커, 폴백 처리는 운영단계에서 설명한다.)
+- 과도한 요청시에 서비스 장애가 도미노 처럼 벌어질 수 있다 (서킷브레이커, 폴백 처리는 운영단계에서 설명)
 
 ## 비동기식 호출과 Eventual Consistency
 - 비동기식 호출 / 시간적 디커플링 / 장애격리 / 최종 (Eventual) 일관성 테스트
@@ -501,20 +502,20 @@ public class PolicyHandler{
 (####수정필요####)
 ```
 # 알림 서비스를 잠시 내려놓음
-kubectl delete -f alarm.yaml
+kubectl delete -f message.yaml
 
 # 예약처리 (siege 에서)
-http POST http://booking:8080/bookings roomId=1 name=호텔 price=1000 address=서울 host=Superman guest=배트맨 usedate=20201010 #Success
-http POST http://booking:8080/bookings roomId=2 name=펜션 price=1000 address=양평 host=Superman guest=홍길동 usedate=20201011 #Success
+http POST http://reservation:8080/cleaningReservations requestDate=20200907 place=seoul status=ReservationApply price=250000 customerName=chae #Success
+http POST http://reservation:8080/cleaningReservations requestDate=20200909 place=pangyo status=ReservationApply price=300000 customerName=noh #Success
 
 # 알림이력 확인 (siege 에서)
-http http://alarm:8080/alarms # 알림이력조회 불가
+http http://message:8080/messages # 알림이력조회 불가
 
 # 알림 서비스 기동
-kubectl apply -f alarm.yaml
+kubectl apply -f message.yaml
 
 # 알림이력 확인 (siege 에서)
-http http://alarm:8080/alarms # 알림이력조회
+http http://message:8080/messages # 알림이력조회
 ```
 
 # 운영
@@ -531,7 +532,7 @@ http http://alarm:8080/alarms # 알림이력조회
 
 * istio-injection 적용 (기 적용완료) ####수정필요####
 ```
-kubectl label namespace mybnb istio-injection=enabled
+kubectl label namespace ssak3 istio-injection=enabled
 ```
 * 예약, 결제 서비스 모두 아무런 변경 없음
 
@@ -541,8 +542,28 @@ kubectl label namespace mybnb istio-injection=enabled
 ```console
 ```
 ## 오토스케일 아웃
-```console
+앞서 CB 는 시스템을 안정되게 운영할 수 있게 해줬지만 사용자의 요청을 100% 받아들여주지 못했기 때문에 이에 대한 보완책으로 자동화된 확장 기능을 적용하고자 함
+* (istio injection 적용한 경우) istio injection 적용 해제
 ```
+kubectl label namespace ssak3 istio-injection=disabled --overwrite
+
+kubectl apply -f reservation.yaml
+kubectl apply -f payment.yaml
+```
+- 결제서비스 배포시 resource 설정 적용되어 있음
+```
+    spec:
+      containers:
+          ...
+          resources:
+            limits:
+              cpu: 500m
+            requests:
+              cpu: 200m
+```
+
+- 결제서비스에 대한 replica 를 동적으로 늘려주도록 HPA 를 설정한다. 설정은 CPU 사용량이 15프로를 넘어서면 replica 를 3개까지 늘려준다
+
 ## 무정지 재배포
 ```console
 ```
