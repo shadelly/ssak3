@@ -17,4 +17,17 @@ http DELETE http://localhost:8081/cleaningReservations/1
 
 http POST http://localhost:8082/cleans status=CleaningStarted requestId=1 cleanDate=20200909
 
+<azure 초기 셋팅>
+git config --global user.name "dragon-skcc"
 
+git config --global user.email "dragon.skcc@gmail.com"
+
+git remote add origin https://github.com/dragon-skcc/ssak3.git
+
+az aks get-credentials --resource-group ssak3-rg --name ssak3-aks
+
+az acr login --name ssak3acr 
+
+az aks update -n ssak3-aks -g ssak3-rg --attach-acr ssak3acr
+
+kubectl config current-context
