@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reservation
+  namespace: ssak3
+  labels:
+    app: reservation
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: reservation
+  template:
+    metadata:
+      labels:
+        app: reservation
+    spec:
+      containers:
+        - name: reservation
+          image: ssak3acr.azurecr.io/reservation:1.0
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: api.url.payment
+              valueFrom:
+                configMapKeyRef:
+                  name: ssak3-config
+                  key: api.url.payment
+          
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: reservation
+  namespace: ssak3
+  labels:
+    app: reservation
+spec:
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: reservation
