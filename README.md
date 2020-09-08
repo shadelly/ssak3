@@ -775,10 +775,29 @@ Shortest transaction:           0.01
 
 ## 무정지 재배포
 - 먼저 무정지 재배포가 100% 되는 것인지 확인하기 위해서 Autoscaler 이나 CB 설정을 제거함 (위의 시나리오에서 제거되었음)
+```console
+kubectl delete horizontalpodautoscaler.autoscaling/payment -n ssak3
+
+```
 - seige 로 배포작업 직전에 워크로드를 모니터링 함.
 ```console
-siege -v -c1 -t300S -r10 --content-type "application/json" 'http://reservation:8080/cleaningReservations'
+siege -v -c1 -t30S -r10 --content-type "application/json" 'http://reservation:8080/cleaningReservations POST {"customerName": "noh","price": 300000,"requestDate": "20200909","status": "ReservationApply"}'
 ```
+- 새버전으로의 배포 시작
+```
+# 컨테이너 이미지 Update (readness, liveness 미설정 상태)
+kubectl apply -f booking_na.yaml
+```
+- seige 의 화면으로 넘어가서 Availability 가 100% 미만으로 떨어졌는지 확인
+```
+
+```
+
+- 배포기간중 Availability 가 평소 100%에서 70% 대로 떨어지는 것을 확인. 
+- 원인은 쿠버네티스가 성급하게 새로 올려진 서비스를 READY 상태로 인식하여 서비스 유입을 진행한 것이기 때문. 이를 막기위해 Readiness Probe 를 설정함:
+# deployment.yaml 의 readiness probe 의 설정:
+- kubectl apply -f booking.yaml 실행
+
 
 ## ConfigMap 사용
 - 시스템별로 또는 운영중에 동적으로 변경 가능성이 있는 설정들을 ConfigMap을 사용하여 관리합니다.
