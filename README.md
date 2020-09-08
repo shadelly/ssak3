@@ -601,45 +601,71 @@ kubectl label namespace ssak3 istio-injection=enabled
 - 동시사용자 100명
 - 60초 동안 실시
 ```console
-siege -v -c100 -t60S -r10 --content-type "application/json" 'http://reservation:8080/reservations POST {"customerName": "noh","price": 300000,"requestDate": "20200909","status": "ReservationApply"}'
+siege -v -c100 -t60S -r10 --content-type "application/json" 'http://reservation:8080/cleaningReservations POST {"customerName": "noh","price": 300000,"requestDate": "20200909","status": "ReservationApply"}'
 
-HTTP/1.1 404     0.49 secs:     133 bytes ==> POST http://reservation:8080/reservations
-HTTP/1.1 404     0.46 secs:     133 bytes ==> POST http://reservation:8080/reservations
-HTTP/1.1 404     0.44 secs:     133 bytes ==> POST http://reservation:8080/reservations
-HTTP/1.1 404     0.49 secs:     133 bytes ==> POST http://reservation:8080/reservations
-HTTP/1.1 404     0.07 secs:     133 bytes ==> POST http://reservation:8080/reservations
-HTTP/1.1 404     0.34 secs:     133 bytes ==> POST http://reservation:8080/reservations
-HTTP/1.1 404     0.46 secs:     133 bytes ==> POST http://reservation:8080/reservations
-HTTP/1.1 404     0.33 secs:     133 bytes ==> POST http://reservation:8080/reservations
-HTTP/1.1 404     0.47 secs:     133 bytes ==> POST http://reservation:8080/reservations
-HTTP/1.1 404     0.48 secs:     133 bytes ==> POST http://reservation:8080/reservations
-HTTP/1.1 404     0.37 secs:     133 bytes ==> POST http://reservation:8080/reservations
-HTTP/1.1 404     0.25 secs:     133 bytes ==> POST http://reservation:8080/reservations
+HTTP/1.1 201     1.20 secs:     341 bytes ==> POST http://reservation:8080/cleaningReservations
+HTTP/1.1 201     1.12 secs:     341 bytes ==> POST http://reservation:8080/cleaningReservations
+HTTP/1.1 201     0.14 secs:     341 bytes ==> POST http://reservation:8080/cleaningReservations
+HTTP/1.1 201     1.11 secs:     341 bytes ==> POST http://reservation:8080/cleaningReservations
+HTTP/1.1 201     1.21 secs:     341 bytes ==> POST http://reservation:8080/cleaningReservations
+HTTP/1.1 201     1.20 secs:     341 bytes ==> POST http://reservation:8080/cleaningReservations
+HTTP/1.1 201     1.20 secs:     341 bytes ==> POST http://reservation:8080/cleaningReservations
+HTTP/1.1 201     1.11 secs:     341 bytes ==> POST http://reservation:8080/cleaningReservations
+HTTP/1.1 201     1.21 secs:     341 bytes ==> POST http://reservation:8080/cleaningReservations
+HTTP/1.1 201     0.12 secs:     341 bytes ==> POST http://reservation:8080/cleaningReservations
 
 Lifting the server siege...
-Transactions:                  17981 hits
+Transactions:                   4719 hits
 Availability:                 100.00 %
-Elapsed time:                  59.33 secs
-Data transferred:               2.28 MB
-Response time:                  0.32 secs
-Transaction rate:             303.07 trans/sec
-Throughput:                     0.04 MB/sec
-Concurrency:                   96.44
-Successful transactions:           0
+Elapsed time:                  59.14 secs
+Data transferred:               1.53 MB
+Response time:                  1.23 secs
+Transaction rate:              79.79 trans/sec
+Throughput:                     0.03 MB/sec
+Concurrency:                   97.95
+Successful transactions:        4719
 Failed transactions:               0
-Longest transaction:            2.63
-Shortest transaction:           0.00
-
-HTTP/1.1 404     0.60 secs:     133 bytes ==> POST http://reservation:8080/reservations
-
+Longest transaction:            7.29
+Shortest transaction:           0.05
 ```
 * 서킷 브레이킹을 위한 DestinationRule 적용
+```
+cd ssak3/yaml
+kubectl apply -f payment_dr.yaml
 
+# destinationrule.networking.istio.io/dr-payment created
+
+HTTP/1.1 500     0.68 secs:     262 bytes ==> POST http://reservation:8080/cleaningReservations
+HTTP/1.1 500     0.70 secs:     262 bytes ==> POST http://reservation:8080/cleaningReservations
+HTTP/1.1 500     0.71 secs:     262 bytes ==> POST http://reservation:8080/cleaningReservations
+HTTP/1.1 500     0.72 secs:     262 bytes ==> POST http://reservation:8080/cleaningReservations
+HTTP/1.1 500     0.92 secs:     262 bytes ==> POST http://reservation:8080/cleaningReservations
+HTTP/1.1 500     0.68 secs:     262 bytes ==> POST http://reservation:8080/cleaningReservations
+HTTP/1.1 500     0.82 secs:     262 bytes ==> POST http://reservation:8080/cleaningReservations
+HTTP/1.1 500     0.71 secs:     262 bytes ==> POST http://reservation:8080/cleaningReservations
+siege aborted due to excessive socket failure; you
+can change the failure threshold in $HOME/.siegerc
+
+Transactions:                     20 hits
+Availability:                   1.75 %
+Elapsed time:                   9.92 secs
+Data transferred:               0.29 MB
+Response time:                 48.04 secs
+Transaction rate:               2.02 trans/sec
+Throughput:                     0.03 MB/sec
+Concurrency:                   96.85
+Successful transactions:          20
+Failed transactions:            1123
+Longest transaction:            2.53
+Shortest transaction:           0.04
+```
 ## 오토스케일 아웃
 앞서 CB 는 시스템을 안정되게 운영할 수 있게 해줬지만 사용자의 요청을 100% 받아들여주지 못했기 때문에 이에 대한 보완책으로 자동화된 확장 기능을 적용하고자 함
 * (istio injection 적용한 경우) istio injection 적용 해제
 ```
 kubectl label namespace ssak3 istio-injection=disabled --overwrite
+
+# namespace/ssak3 labeled
 
 kubectl apply -f reservation.yaml
 kubectl apply -f payment.yaml
@@ -657,12 +683,196 @@ kubectl apply -f payment.yaml
 ```
 
 - 결제서비스에 대한 replica 를 동적으로 늘려주도록 HPA 를 설정한다. 설정은 CPU 사용량이 15프로를 넘어서면 replica 를 3개까지 늘려준다
+```console
+kubectl autoscale deploy payment -n ssak3 --min=1 --max=3 --cpu-percent=15
+
+# horizontalpodautoscaler.autoscaling/payment autoscaled
+
+root@ssak3-vm:~/ssak3/yaml# kubectl get all -n ssak3
+NAME                               READY   STATUS    RESTARTS   AGE
+pod/cleaning-bf474f568-vxl8r       2/2     Running   0          3h5m
+pod/dashboard-7f7768bb5-7l8wr      2/2     Running   0          3h3m
+pod/gateway-6dfcbbc84f-rwnsh       2/2     Running   0          85m
+pod/message-69597f6864-fjs69       2/2     Running   0          34m
+pod/payment-7749f7dc7c-kfjxb       2/2     Running   0          39m
+pod/reservation-775fc6574d-kddgd   2/2     Running   0          3h12m
+pod/siege                          2/2     Running   0          4h27m
+
+NAME                  TYPE           CLUSTER-IP     EXTERNAL-IP    PORT(S)          AGE
+service/cleaning      ClusterIP      10.0.150.114   <none>         8080/TCP         3h5m
+service/dashboard     ClusterIP      10.0.69.44     <none>         8080/TCP         3h3m
+service/gateway       LoadBalancer   10.0.56.218    20.196.72.75   8080:32642/TCP   85m
+service/message       ClusterIP      10.0.255.90    <none>         8080/TCP         34m
+service/payment       ClusterIP      10.0.64.167    <none>         8080/TCP         39m
+service/reservation   ClusterIP      10.0.23.111    <none>         8080/TCP         3h12m
+
+NAME                          READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/cleaning      1/1     1            1           3h5m
+deployment.apps/dashboard     1/1     1            1           3h3m
+deployment.apps/gateway       1/1     1            1           85m
+deployment.apps/message       1/1     1            1           34m
+deployment.apps/payment       1/1     1            1           39m
+deployment.apps/reservation   1/1     1            1           3h12m
+
+NAME                                     DESIRED   CURRENT   READY   AGE
+replicaset.apps/cleaning-bf474f568       1         1         1       3h5m
+replicaset.apps/dashboard-7f7768bb5      1         1         1       3h3m
+replicaset.apps/gateway-6dfcbbc84f       1         1         1       85m
+replicaset.apps/message-69597f6864       1         1         1       34m
+replicaset.apps/payment-7749f7dc7c       1         1         1       39m
+replicaset.apps/reservation-775fc6574d   1         1         1       3h12m
+
+NAME                                          REFERENCE            TARGETS   MINPODS   MAXPODS   REPLICAS   AGE
+horizontalpodautoscaler.autoscaling/payment   Deployment/payment   3%/15%    1         3         1          55s
+```
+
+- CB 에서 했던 방식대로 워크로드를 3분 동안 걸어준다.
+```console
+siege -v -c100 -t180S -r10 --content-type "application/json" 'http://reservation:8080/cleaningReservations POST {"customerName": "noh","price": 300000,"requestDate": "20200909","status": "ReservationApply"}'
+```
+
+- 오토스케일이 어떻게 되고 있는지 모니터링을 걸어둔다
+```console
+kubectl get deploy payment -n ssak3 -w 
+
+NAME      READY   UP-TO-DATE   AVAILABLE   AGE
+payment   1/1     1            1           43m
+
+# siege 부하 적용 후
+root@ssak3-vm:/# kubectl get deploy payment -n ssak3 -w
+NAME      READY   UP-TO-DATE   AVAILABLE   AGE
+payment   1/1     1            1           43m
+payment   1/3     1            1           44m
+payment   1/3     1            1           44m
+payment   1/3     3            1           44m
+payment   2/3     3            2           46m
+payment   3/3     3            3           46m
+```
+- siege 의 로그를 보아도 전체적인 성공률이 높아진 것을 확인 할 수 있다.
+```
+Lifting the server siege...
+Transactions:                  19309 hits
+Availability:                 100.00 %
+Elapsed time:                 179.75 secs
+Data transferred:               6.31 MB
+Response time:                  0.92 secs
+Transaction rate:             107.42 trans/sec
+Throughput:                     0.04 MB/sec
+Concurrency:                   99.29
+Successful transactions:       19309
+Failed transactions:               0
+Longest transaction:            7.33
+Shortest transaction:           0.01
+```
 
 ## 무정지 재배포
+- 먼저 무정지 재배포가 100% 되는 것인지 확인하기 위해서 Autoscaler 이나 CB 설정을 제거함 (위의 시나리오에서 제거되었음)
+- seige 로 배포작업 직전에 워크로드를 모니터링 함.
 ```console
+siege -v -c1 -t300S -r10 --content-type "application/json" 'http://reservation:8080/cleaningReservations'
 ```
+
 ## ConfigMap 사용
+- 시스템별로 또는 운영중에 동적으로 변경 가능성이 있는 설정들을 ConfigMap을 사용하여 관리합니다.
+- configmap.yaml
 ```console
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ssak3-config
+  namespace: ssak3
+data:
+  api.url.payment: http://payment:8080
 ```
-# 신규 개발 조직의 추가
+
+- reservation.yaml (configmap 사용)
+```console
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reservation
+  namespace: ssak3
+  labels:
+    app: reservation
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: reservation
+  template:
+    metadata:
+      labels:
+        app: reservation
+    spec:
+      containers:
+        - name: reservation
+          image: ssak3acr.azurecr.io/reservation:1.0
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: api.url.payment
+              valueFrom:
+                configMapKeyRef:
+                  name: ssak3-config
+                  key: api.url.payment
+          readinessProbe:
+            httpGet:
+              path: '/actuator/health'
+              port: 8080
+            initialDelaySeconds: 10
+            timeoutSeconds: 2
+            periodSeconds: 5
+            failureThreshold: 10
+          livenessProbe:
+            httpGet:
+              path: '/actuator/health'
+              port: 8080
+            initialDelaySeconds: 120
+            timeoutSeconds: 2
+            periodSeconds: 5
+            failureThreshold: 5
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: reservation
+  namespace: ssak3
+  labels:
+    app: reservation
+spec:
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: reservation
+```
+
+- configmap 설정정보 확인
+```console
+kubectl describe pod/reservation-775fc6574d-kddgd -n ssak3
+
+...중략
+Containers:
+  reservation:
+    Container ID:   docker://af733ea1c805029ad0baf5c448981b3b84def8e4c99656638f2560b48b14816e
+    Image:          ssak3acr.azurecr.io/reservation:1.0
+    Image ID:       docker-pullable://ssak3acr.azurecr.io/reservation@sha256:5a9eb3e1b40911025672798628d75de0670f927fccefea29688f9627742e3f6d
+    Port:           8080/TCP
+    Host Port:      0/TCP
+    State:          Running
+      Started:      Tue, 08 Sep 2020 13:24:05 +0000
+    Ready:          True
+    Restart Count:  0
+    Liveness:       http-get http://:8080/actuator/health delay=120s timeout=2s period=5s #success=1 #failure=5
+    Readiness:      http-get http://:8080/actuator/health delay=10s timeout=2s period=5s #success=1 #failure=10
+    Environment:
+      api.url.payment:  <set to the key 'api.url.payment' of config map 'ssak3-config'>  Optional: false
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from default-token-w4fh5 (ro)
+...중략
+```
+
 
