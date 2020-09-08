@@ -8,9 +8,6 @@
 git clone https://github.com/dragon-skcc/ssak3.git
 # 주요 사용 명령어
 git status
-git commit -m '메시지'
-git push 
-git pull origin master
 ```
 
 ## ssak3 external IP
@@ -213,11 +210,6 @@ kubectl edit service/kiali -n istio-system
 kubectl create namespace ssak3
 ```
 
-## namespace 설정
-```console
-kubectl config set-context --current --namespace=ssak3
-```
-
 - istio enabled
 ```console
 kubectl label namespace ssak3 istio-injection=enabled
@@ -241,45 +233,53 @@ mvn package
 
 - for azure cli
 ```console
-docker build -t ssak3acr.azurecr.io/gateway .
-docker images
-docker push ssak3acr.azurecr.io/gateway
+# docker build -t dragon.skcc@gmail.com/my-nginx:v2   - docker build
+# docker images    : docker images 확인
+# docker push dragon.skcc@gmail.com/my-nginx:v2   : docker를 리파지토리에 push
 ```
-
+- for dockerhub
+```console
+docker build -t jihwancha/clean-html:latest .
+docker push jihwancha/clean-html:latest
+```
 ## application deploy
 ```console
-kubectl create deploy gateway --image=ssak3acr.azurecr.io/gateway
-kubectl create -f gateway.yaml
-kubectl apply -f gateway.yaml
-# 많이 사용하는 kubectl
+# kubectl create deploy my-nginx --image=dragon.skcc@gmail.com/my-nginx:v2 -  AZure portal 에서 확인
+# kubectl create -f nginx.yaml
+# kubectl apply -f nginx.yaml
 # kubectl 동사 목적어
 # kubectl get nodes   - 클러스터에 만들어 진 노드의 수 (worker nodes. VM. 서버)
 # kubectl get pod
 # kubectl get pod -o wide  - Output을 좀더 많이 출력. node 정보도 같이 보여짐.
-# kubectl config set-context --current --namespace=ssak3
 
-kubectl create ns ssak3
-kubectl label ns ssak3 istio-injection=enabled
-kubectl create deploy gateway --image=ssak3acr.azurecr.io/gateway -n ssak3
-kubectl create deploy reservation --image=ssak3acr.azurecr.io/reservation -n ssak3
-kubectl create deploy cleaning --image=ssak3acr.azurecr.io/cleaning -n ssak3
-kubectl create deploy dashboard --image=ssak3acr.azurecr.io/dashboard -n ssak3
-kubectl create deploy message --image=ssak3acr.azurecr.io/message -n ssak3
+-- <변경 필요>
+kubectl create ns cna-shop
+kubectl label ns cna-shop istio-injection=enabled
+kubectl create deploy order --image=admin4.azurecr.io/cna-order:v1 -n cna-shop
+kubectl create deploy delivery --image=admin4.azurecr.io/cna-delivery:v1 -n cna-shop
+kubectl create deploy customercenter --image=admin4.azurecr.io/cna-customercenter:v1 -n cna-shop
+kubectl create deploy gateway --image=admin4.azurecr.io/cna-gateway:v1 -n cna-shop
 
-kubectl expose deploy gateway --port=8080 -n ssak3
-kubectl expose deploy reservation --port=8080 -n ssak3
-kubectl expose deploy cleaning --port=8080 -n ssak3
-kubectl expose deploy dashboard --port=8080 -n ssak3
-kubectl expose deploy message --port=8080 -n ssak3
+kubectl expose deploy order --port=8080 -n cna-shop
+kubectl expose deploy delivery --port=8080 -n cna-shop
+kubectl expose deploy customercenter --port=8080 -n cna-shop
+kubectl expose deploy gateway --port=8080 -n cna-shop
+-- <여기까지>
 
 cd clean/yaml
 
 kubectl apply -f configmap.yaml
+
 kubectl apply -f gateway.yaml
-kubectl apply -f reservation.yaml
-kubectl apply -f cleaning.yaml
-kubectl apply -f dashboard.yaml
-kubectl apply -f message.yaml
+kubectl apply -f html.yaml
+kubectl apply -f room.yaml
+kubectl apply -f booking.yaml
+kubectl apply -f pay.yaml
+kubectl apply -f mypage.yaml
+
+kubectl apply -f alarm.yaml
+kubectl apply -f review.yaml
+
 ```
 
 ## 숙소 등록 (siege 에서)
