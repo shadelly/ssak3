@@ -225,6 +225,10 @@ public interface PaymentRepository extends PagingAndSortingRepository<Payment, L
 ```
 kubectl exec -it siege -n cleaning -- /bin/bash
 ```
+
+- kiali 접속 : http://20.41.120.4:20001/
+  ![kiali](https://user-images.githubusercontent.com/69634194/92501566-b4e22a80-f239-11ea-9657-fd465a38bc48.png)
+
 - (siege 에서) 적용 후 REST API 테스트 
 ```
 # 청소 서비스 예약요청 처리
@@ -659,6 +663,10 @@ Failed transactions:            1123
 Longest transaction:            2.53
 Shortest transaction:           0.04
 ```
+
+- DestinationRule 적용되어 서킷 브레이킹 동작 확인 (kiali 화면)
+  ![kiali2](https://user-images.githubusercontent.com/69634194/92505880-94b56a00-f23f-11ea-9b10-b1e43e195ca2.png)
+
 ## 오토스케일 아웃
 앞서 CB 는 시스템을 안정되게 운영할 수 있게 해줬지만 사용자의 요청을 100% 받아들여주지 못했기 때문에 이에 대한 보완책으로 자동화된 확장 기능을 적용하고자 함
 * (istio injection 적용한 경우) istio injection 적용 해제
@@ -850,7 +858,7 @@ spec:
     app: reservation
 ```
 
-- configmap 설정정보 확인
+- configmap 설정 정보 확인
 ```console
 kubectl describe pod/reservation-775fc6574d-kddgd -n ssak3
 
