@@ -224,7 +224,7 @@ apt-get update
 apt-get install httpie
 ```
 
-## image build & push (이미지명 정해지면 수정)
+## image build & push
 - compile
 ```console
 cd ssak3/gateway
@@ -266,19 +266,16 @@ kubectl expose deploy customercenter --port=8080 -n cna-shop
 kubectl expose deploy gateway --port=8080 -n cna-shop
 -- <여기까지>
 
-cd clean/yaml
+cd ssak3/yaml
 
 kubectl apply -f configmap.yaml
-
 kubectl apply -f gateway.yaml
-kubectl apply -f html.yaml
-kubectl apply -f room.yaml
-kubectl apply -f booking.yaml
-kubectl apply -f pay.yaml
+kubectl apply -f cleaning.yaml
+kubectl apply -f reservation.yaml
+kubectl apply -f payment.yaml
 kubectl apply -f mypage.yaml
+kubectl apply -f message.yaml
 
-kubectl apply -f alarm.yaml
-kubectl apply -f review.yaml
 
 ```
 
