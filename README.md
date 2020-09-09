@@ -388,7 +388,7 @@ kubectl apply -f message.yaml
 * 각 서비스내에 도출된 핵심 Aggregate Root 객체를 Entity 로 선언하였다: (예시는 결제 마이크로서비스).
   - 가능한 현업에서 사용하는 언어 (유비쿼터스 랭귀지)를 그대로 사용할 수 있지만, 일부 구현에 있어서 영문이 아닌 경우는 실행이 불가능한 경우가 있다 Maven pom.xml, Kafka의 topic id, FeignClient 의 서비스 id 등은 한글로 식별자를 사용하는 경우 오류가 발생하는 것을 확인하였다)
   - 최종적으로는 모두 영문을 사용하였으며, 이는 잠재적인 오류 발생 가능성을 차단하고 향후 확장되는 다양한 서비스들 간에 영향도를 최소화하기 위함이다.
-```console
+```java
 package CleaningServiceYD;
 
 import javax.persistence.*;
@@ -463,7 +463,7 @@ public class Payment {
 
 ```
 - Entity Pattern 과 Repository Pattern 을 적용하여 JPA 를 통하여 다양한 데이터소스 유형 (RDB or NoSQL) 에 대한 별도의 처리가 없도록 데이터 접근 어댑터를 자동 생성하기 위하여 Spring Data REST 의 RestRepository 를 적용하였다
-```
+```java
 package CleaningServiceYD;
 
 import org.springframework.data.repository.PagingAndSortingRepository;
@@ -490,7 +490,7 @@ payment       ClusterIP      10.0.64.167    <none>         8080/TCP         8h
 reservation   ClusterIP      10.0.23.111    <none>         8080/TCP         11h
 ```
 - API Gateway 적용 확인
-```
+```console
 //예약
 http POST http://20.196.72.75:8080/cleaningReservations requestDate=20200907 place=seoul status=ReservationApply price=2000 customerName=yeon
 // 청소
@@ -500,7 +500,7 @@ http DELETE http://20.196.72.75:8080/cleaningReservations/1
 ```
 
 - siege 접속
-```
+```console
 kubectl exec -it siege -n cleaning -- /bin/bash
 ```
 
@@ -535,7 +535,7 @@ http POST http://cleaning:8080/cleans status=CleaningStarted requestId=1 cleanDa
 분석단계에서의 조건 중 하나로 예약->결제 간의 호출은 동기식 일관성을 유지하는 트랜잭션으로 처리하기로 하였다. 호출 프로토콜은 이미 앞서 Rest Repository 에 의해 노출되어있는 REST 서비스를 FeignClient 를 이용하여 호출하도록 한다. 
 
 - 결제 서비스를 호출하기 위하여 Stub과 (FeignClient) 를 이용하여 Service 대행 인터페이스 (Proxy) 를 구현 
-```console
+```java
 @FeignClient(name="Payment", url="${api.url.payment}")
 public interface PaymentService {
 
@@ -545,7 +545,7 @@ public interface PaymentService {
 }
 ```
 - 예약을 받은 직후(@PostPersist) 결제가 완료되도록 처리
-```
+```java
 @Entity
 @Table(name="CleaningReservation_table")
 public class CleaningReservation {
@@ -575,7 +575,7 @@ public class CleaningReservation {
         }
 
     }
-
+}
 ```
 
 - 호출 시간에 따른 타임 커플링이 발생하며, 결제 시스템이 장애가 나면 주문도 못받는다는 것을 확인
@@ -680,7 +680,7 @@ x-envoy-upstream-service-time: 113
 결제가 이루어진 후에 알림 처리는 동기식이 아니라 비 동기식으로 처리하여 알림 시스템의 처리를 위하여 예약이 블로킹 되지 않아도록 처리한다.
  
 - 이를 위하여 예약관리, 결제관리에 기록을 남긴 후에 곧바로 완료되었다는 도메인 이벤트를 카프카로 송출한다(Publish)
-```console
+```java
 @Entity
 @Table(name="Payment_table")
 public class Payment {
@@ -716,10 +716,10 @@ public class Payment {
 
     }
     ...
-
+}
 ```
 - 알림 서비스에서는 결제승인, 청소완료, 결제취소 이벤트에 대해서 이를 수신하여 자신의 정책을 처리하도록 PolicyHandler 를 구현한다
-```
+```java
 @Service
 public class PolicyHandler{
 
@@ -1042,7 +1042,7 @@ payment   2/3     3            2           46m
 payment   3/3     3            3           46m
 ```
 - siege 의 로그를 보아도 전체적인 성공률이 높아진 것을 확인 할 수 있다.
-```
+```console
 Lifting the server siege...
 Transactions:                  19309 hits
 Availability:                 100.00 %
@@ -1140,7 +1140,7 @@ kubectl apply -f reservation_na.yaml
 ```
 
 - seige 의 화면으로 넘어가서 Availability 가 100% 미만으로 떨어졌는지 확인
-```
+```console
 Lifting the server siege...
 Transactions:                  22984 hits
 Availability:                  98.68 %
@@ -1157,7 +1157,7 @@ Shortest transaction:           0.00
 
 ```
 
-- 배포기간중 Availability 가 평소 100%에서 70% 대로 떨어지는 것을 확인. 
+- 배포기간중 Availability 가 평소 100%에서 98% 대로 떨어지는 것을 확인. 
 - 원인은 쿠버네티스가 성급하게 새로 올려진 서비스를 READY 상태로 인식하여 서비스 유입을 진행한 것이기 때문. 이를 막기위해 Readiness Probe 를 설정함:
 ```console
 # deployment.yaml 의 readiness probe 의 설정:
@@ -1174,7 +1174,7 @@ pod/siege                          2/2     Running   0          5h24m
 
 ```
 - 동일한 시나리오로 재배포 한 후 Availability 확인
-```
+```console
 Lifting the server siege...
 Transactions:                   6663 hits
 Availability:                 100.00 %
@@ -1195,7 +1195,7 @@ Shortest transaction:           0.00
 ## ConfigMap 사용
 - 시스템별로 또는 운영중에 동적으로 변경 가능성이 있는 설정들을 ConfigMap을 사용하여 관리합니다.
 - configmap.yaml
-```console
+```yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -1206,7 +1206,7 @@ data:
 ```
 
 - reservation.yaml (configmap 사용)
-```console
+```yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
