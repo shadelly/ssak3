@@ -241,9 +241,6 @@ sudo docker run hello-world
 
 ```
 
-## docker hub 계정로그인
-ID : dragonskcc
-
 ## Docker demon과 Docker client 연결
 ```console
 cd
@@ -327,7 +324,7 @@ kubectl create namespace ssak3
 kubectl config set-context --current --namespace=ssak3
 ```
 
-- istio enabled
+## istio enabled
 ```console
 kubectl label namespace ssak3 istio-injection=enabled
 ```
