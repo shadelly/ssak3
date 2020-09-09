@@ -357,14 +357,6 @@ docker push ssak3acr.azurecr.io/gateway
 
 ## application deploy
 ```console
-kubectl create deploy gateway --image=ssak3acr.azurecr.io/gateway -  AZure portal 에서 확인
-kubectl create -f gateway.yaml
-kubectl apply -f gateway.yaml
-# kubectl 동사 목적어
-# kubectl get nodes   - 클러스터에 만들어 진 노드의 수 (worker nodes. VM. 서버)
-# kubectl get pod
-# kubectl get pod -o wide  - Output을 좀더 많이 출력. node 정보도 같이 보여짐.
-
 kubectl create ns ssak3
 kubectl label ns ssak3 istio-injection=enabled
 kubectl create deploy gateway --image=ssak3acr.azurecr.io/gateway -n ssak3
