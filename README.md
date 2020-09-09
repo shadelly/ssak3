@@ -255,7 +255,6 @@ export DOCKER_HOST=tcp://0.0.0.0:2375
 source ~/.bashrc
 ```
 
-
 ## Kafka install (kubernetes/helm)
 참고 - (https://workflowy.com/s/msa/27a0ioMCzlpV04Ib#/a7018fb8c62)
 ```console
@@ -342,7 +341,7 @@ apt-get update
 apt-get install httpie
 ```
 
-## image build & push (이미지명 정해지면 수정)
+## image build & push
 - compile
 ```console
 cd ssak3/gateway
@@ -885,7 +884,7 @@ x-envoy-upstream-service-time: 439
 
 ## 동기식 호출 / 서킷 브레이킹 / 장애격리
 
-### 방식1) 서킷 브레이킹 프레임워크의 선택: istio-injection + DestinationRule
+### 서킷 브레이킹 프레임워크의 선택: istio-injection + DestinationRule
 
 * istio-injection 적용 (기 적용완료)
 ```
@@ -1067,21 +1066,87 @@ Longest transaction:            7.33
 Shortest transaction:           0.01
 ```
 
-## 무정지 재배포
+## 무정지 재배포 (readness)
 - 먼저 무정지 재배포가 100% 되는 것인지 확인하기 위해서 Autoscaler 이나 CB 설정을 제거함 (위의 시나리오에서 제거되었음)
 ```console
 kubectl delete horizontalpodautoscaler.autoscaling/payment -n ssak3
-
 ```
+- yaml 설정 참고
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reservation
+  namespace: ssak3
+  labels:
+    app: reservation
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: reservation
+  template:
+    metadata:
+      labels:
+        app: reservation
+    spec:
+      containers:
+        - name: reservation
+          image: ssak3acr.azurecr.io/reservation:1.0
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: api.url.payment
+              valueFrom:
+                configMapKeyRef:
+                  name: ssak3-config
+                  key: api.url.payment
+          readinessProbe:
+            httpGet:
+              path: '/actuator/health'
+              port: 8080
+            initialDelaySeconds: 10
+            timeoutSeconds: 2
+            periodSeconds: 5
+            failureThreshold: 10
+          livenessProbe:
+            httpGet:
+              path: '/actuator/health'
+              port: 8080
+            initialDelaySeconds: 120
+            timeoutSeconds: 2
+            periodSeconds: 5
+            failureThreshold: 5
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: reservation
+  namespace: ssak3
+  labels:
+    app: reservation
+spec:
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: reservation
+```
+
 - seige 로 배포작업 직전에 워크로드를 모니터링 함.
 ```console
 siege -v -c1 -t120S -r10 --content-type "application/json" 'http://reservation:8080/cleaningReservations POST {"customerName": "noh","price": 300000,"requestDate": "20200909","status": "ReservationApply"}'
 ```
+
 - 새버전으로의 배포 시작
 ```
 # 컨테이너 이미지 Update (readness, liveness 미설정 상태)
 kubectl apply -f reservation_na.yaml
 ```
+
 - seige 의 화면으로 넘어가서 Availability 가 100% 미만으로 떨어졌는지 확인
 ```
 Lifting the server siege...
