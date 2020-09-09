@@ -507,10 +507,10 @@ kubectl exec -it siege -n cleaning -- /bin/bash
 - (siege 에서) 적용 후 REST API 테스트 
 ```
 # 청소 서비스 예약요청 처리
-http POST http://reservation:8081/cleaningReservations requestDate=20200907 place=seoul status=ReservationApply price=2000 customerName=yeon
+http POST http://reservation:8080/cleaningReservations requestDate=20200907 place=seoul status=ReservationApply price=2000 customerName=yeon
 
 # 예약 상태 확인
-http http://reservation:8081/reservations/1
+http http://reservation:8080/reservations/1
 
 # 예약취소 
 http DELETE http://reservation:8080/cleaningReservations/1
