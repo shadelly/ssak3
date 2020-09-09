@@ -1,7 +1,7 @@
 # Ssak3 - 청소대행 서비스
 
 # Table of contents
-- [ssak3]
+
   - [서비스 시나리오](#서비스-시나리오)
   - [분석/설계](#분석/설계)
   - [구현](#구현)
@@ -16,7 +16,7 @@
     - [오토스케일 아웃](#오토스케일-아웃)
     - [무정지 재배포](#무정지-재배포)
     - [ConfigMap 사용](#ConfigMap-사용)
-  - [신규 개발 조직의 추가](#신규-개발-조직의-추가)
+
 
 # 서비스 시나리오
   
@@ -221,6 +221,31 @@ public interface PaymentRepository extends PagingAndSortingRepository<Payment, L
 }
 ```
 
+- API Gateway 적용
+```console
+# gateway service type 변경
+$ kubectl edit service/gateway -n ssak3
+(ClusterIP -> LoadBalancer)
+
+root@ssak3-vm:~/ssak3/Payment# kubectl get service -n ssak3
+NAME          TYPE           CLUSTER-IP     EXTERNAL-IP    PORT(S)          AGE
+cleaning      ClusterIP      10.0.150.114   <none>         8080/TCP         11h
+dashboard     ClusterIP      10.0.69.44     <none>         8080/TCP         11h
+gateway       LoadBalancer   10.0.56.218    20.196.72.75   8080:32642/TCP   9h
+message       ClusterIP      10.0.255.90    <none>         8080/TCP         8h
+payment       ClusterIP      10.0.64.167    <none>         8080/TCP         8h
+reservation   ClusterIP      10.0.23.111    <none>         8080/TCP         11h
+```
+- API Gateway 적용 확인
+```
+//예약
+http POST http://20.196.72.75:8080/cleaningReservations requestDate=20200907 place=seoul status=ReservationApply price=2000 customerName=yeon
+// 청소
+http POST http://20.196.72.75:8080/cleans status=CleaningStarted requestId=1 cleanDate=20200909
+// 예약취소
+http DELETE http://20.196.72.75:8080/cleaningReservations/1
+```
+
 - siege 접속
 ```
 kubectl exec -it siege -n cleaning -- /bin/bash
@@ -236,7 +261,14 @@ http POST http://reservation:8081/cleaningReservations requestDate=20200907 plac
 
 # 예약 상태 확인
 http http://reservation:8081/reservations/1
+
+# 예약취소 
+http DELETE http://reservation:8080/cleaningReservations/1
+
+# 청소 결과 등록
+http POST http://cleaning:8080/cleans status=CleaningStarted requestId=1 cleanDate=20200909
 ```
+
 
 ## 폴리글랏 퍼시스턴스
 
