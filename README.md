@@ -1,6 +1,6 @@
 # Ssak3 - 청소대행 서비스
 
-# Table of contents
+# 목차
 
   - [서비스 시나리오](#서비스-시나리오)
   - [분석/설계](#분석설계)
@@ -49,7 +49,7 @@
 
 
 ## TO-BE 조직 (Vertically-Aligned)
-  ![04](https://user-images.githubusercontent.com/69634194/92385625-30b27900-f14d-11ea-9e39-1fbe1bf303d5.png)
+  ![4](https://user-images.githubusercontent.com/69634194/92545590-72493e00-f28b-11ea-847d-4afdd801020e.png)
 
 ## Event Storming 결과
 * MSAEz 로 모델링한 이벤트스토밍 결과 : http://www.msaez.io/#/storming/k1eXHY4YSrSFKU3UpQTDRHUvSS23/every/f5d0809e09167fd49a1a95acfc9dd0d2/-MGcF3GTrAc5KsEkYr8b
