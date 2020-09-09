@@ -1055,7 +1055,7 @@ Longest transaction:            7.33
 Shortest transaction:           0.01
 ```
 
-## 무정지 재배포 (readness)
+## 무정지 재배포 (readiness)
 - 먼저 무정지 재배포가 100% 되는 것인지 확인하기 위해서 Autoscaler 이나 CB 설정을 제거함 (위의 시나리오에서 제거되었음)
 ```console
 kubectl delete horizontalpodautoscaler.autoscaling/payment -n ssak3
@@ -1125,7 +1125,7 @@ spec:
     app: reservation
 ```
 
-- seige 로 배포작업 직전에 워크로드를 모니터링 함.
+- siege 로 배포작업 직전에 워크로드를 모니터링 함.
 ```console
 siege -v -c1 -t120S -r10 --content-type "application/json" 'http://reservation:8080/cleaningReservations POST {"customerName": "noh","price": 300000,"requestDate": "20200909","status": "ReservationApply"}'
 ```
@@ -1136,7 +1136,7 @@ siege -v -c1 -t120S -r10 --content-type "application/json" 'http://reservation:8
 kubectl apply -f reservation_na.yaml
 ```
 
-- seige 의 화면으로 넘어가서 Availability 가 100% 미만으로 떨어졌는지 확인
+- siege 의 화면으로 넘어가서 Availability 가 100% 미만으로 떨어졌는지 확인
 ```console
 Lifting the server siege...
 Transactions:                  22984 hits
